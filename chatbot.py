@@ -10,7 +10,8 @@ vectorizer = joblib.load("model/vectorizer.pkl")                        # Load t
 lr = joblib.load("model/classifier.pkl")                                # Load the trained LogisticRegression model
 answers = joblib.load("model/answers.pkl")                              # Load the intent-to-answer lookup dictionary
 
-CONFIDENCE_THRESHOLD = 0.10                                              # Minimum confidence required before trusting a real-topic prediction (out_of_scope is handled separately below, not by this threshold)
+CONFIDENCE_THRESHOLD = 0.10                                              # Minimum top-class probability required before considering a real-topic prediction trustworthy
+MARGIN_THRESHOLD = 0.05                                                  # Minimum gap required between the top and second-best prediction
 
 ## Chat Loop
 
@@ -24,15 +25,17 @@ while True:                                                              # Keep 
 
     question_vector = vectorizer.transform([question])                 # Transform the typed question into the same TF-IDF feature space as training
     probabilities = lr.predict_proba(question_vector)[0]                # Predict probabilities across all classes, including out_of_scope
+    sorted_probs = sorted(probabilities, reverse=True)                  # Sort every class probability from highest to lowest
     best_index = probabilities.argmax()                                 # Find the index of the highest-probability class
     best_intent = lr.classes_[best_index]                               # Look up the actual intent name at that index
-    confidence = probabilities[best_index]                              # Store the confidence value for the predicted class
+    confidence = sorted_probs[0]                                        # The top probability
+    margin = sorted_probs[0] - sorted_probs[1]                          # Gap between the top and second-best pick
 
-    print(f"   (predicted intent: {best_intent}, confidence: {confidence:.3f})")   # Print the predicted intent and confidence for this question
+    print(f"   (predicted intent: {best_intent}, confidence: {confidence:.3f}, margin: {margin:.3f})")   # Print prediction, confidence and margin
 
     if best_intent == "out_of_scope":                                  # Check whether the model recognized this as an off-topic question
         print(f"Bot: {answers['out_of_scope']}\n")                     # Print the redirect message for off-topic questions
-    elif confidence >= CONFIDENCE_THRESHOLD:                            # Otherwise, check whether the model is confident enough in a real-topic prediction
+    elif confidence >= CONFIDENCE_THRESHOLD and margin >= MARGIN_THRESHOLD:   # Only trust the prediction if it clears both checks
         print(f"Bot: {answers[best_intent]}\n")                        # Print the stored answer for the predicted intent
-    else:                                                                # Otherwise, the model isn't confident in any real intent
-        print("Bot: Not confident about that one yet - Step 4 will handle this case.\n")   # Print a placeholder message until Step 4 adds the learning fallback
+    else:                                                                # Otherwise, not reliably confident
+        print("Bot: Not confident about that one yet - this terminal version does not learn, use app.py for that.\n")   # Clarify that learning now lives only in app.py

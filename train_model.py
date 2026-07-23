@@ -9,34 +9,41 @@ from sklearn.linear_model import LogisticRegression                     # Import
 import joblib                                                           # Import joblib to save and load the trained model and vectorizer
 import os                                                                # Import os to create the folder that stores the saved model files
 
-## Loading the FAQ dataset
+## Training Function
 
-with open("faq_data.json") as f:                                        # Open the FAQ dataset containing question, intent and answer for each entry
-    data = json.load(f)                                                 # Load the JSON data into a list of dictionaries
+def train_and_save(data_path="faq_data.json", model_dir="model"):       # Wrapped in a function so app.py can call this directly to retrain on the fly, not just run it as a standalone script
+    with open(data_path) as f:                                          # Open the FAQ dataset containing question, intent and answer for each entry
+        data = json.load(f)                                             # Load the JSON data into a list of dictionaries
 
-df = pd.DataFrame(data)                                                 # Convert the list of dictionaries into a DataFrame for easier handling
-print(f"Loaded {len(df)} training examples across {df['intent'].nunique()} intents")   # Print how many examples and how many distinct intents were loaded
+    df = pd.DataFrame(data)                                             # Convert the list of dictionaries into a DataFrame for easier handling
+    print(f"Loaded {len(df)} training examples across {df['intent'].nunique()} intents")   # Print how many examples and how many distinct intents were loaded
 
-## Data Preprocessing
+    ## Data Preprocessing
 
-X = df["question"]                                                      # Extract the question text as the feature variable
-Y = df["intent"]                                                        # Extract the intent label as the target variable
+    X = df["question"]                                                  # Extract the question text as the feature variable
+    Y = df["intent"]                                                    # Extract the intent label as the target variable
 
-vectorizer = TfidfVectorizer()                                          # Initialize TfidfVectorizer. Converts each question into a row of word-importance scores (Reference: TfidfVectorizer class https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html)
-X_vectorized = vectorizer.fit_transform(X)                               # Fit the vectorizer on the questions and transform them into numeric feature vectors (Reference: fit_transform method https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html#sklearn.feature_extraction.text.TfidfVectorizer.fit_transform)
+    vectorizer = TfidfVectorizer()                                      # Initialize TfidfVectorizer. Converts each question into a row of word-importance scores (Reference: TfidfVectorizer class https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html)
+    X_vectorized = vectorizer.fit_transform(X)                           # Fit the vectorizer on the questions and transform them into numeric feature vectors
 
-## Model Instantiation of Intent Classification and Model training
+    ## Model Instantiation of Intent Classification and Model training
 
-lr = LogisticRegression(max_iter=1000)                                  # Initialize LogisticRegression with a higher max_iter so it reliably converges across this many intent classes (Reference: LogisticRegression class https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
-lr.fit(X_vectorized, Y)                                                 # Fit the logistic regression model using the vectorized questions and their intents (Reference: fit method https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression.fit)
+    lr = LogisticRegression(max_iter=1000, class_weight='balanced')                              # Initialize LogisticRegression with a higher max_iter so it reliably converges across this many intent classes (Reference: LogisticRegression class https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+    lr.fit(X_vectorized, Y)                                             # Fit the logistic regression model using the vectorized questions and their intents (Reference: fit method https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression.fit)
 
-## Saving the Model
+    ## Saving the Model
 
-os.makedirs("model", exist_ok=True)                                     # Create the 'model' folder if it does not already exist
-joblib.dump(vectorizer, "model/vectorizer.pkl")                         # Save the fitted vectorizer so new questions can be transformed the same way later
-joblib.dump(lr, "model/classifier.pkl")                                 # Save the trained LogisticRegression model
+    os.makedirs(model_dir, exist_ok=True)                               # Create the model folder if it does not already exist
+    joblib.dump(vectorizer, f"{model_dir}/vectorizer.pkl")              # Save the fitted vectorizer so new questions can be transformed the same way later
+    joblib.dump(lr, f"{model_dir}/classifier.pkl")                      # Save the trained LogisticRegression model
 
-answer_lookup = df.drop_duplicates(subset="intent").set_index("intent")["answer"].to_dict()   # Build a dictionary mapping each intent to its stored answer
-joblib.dump(answer_lookup, "model/answers.pkl")                         # Save the intent-to-answer lookup dictionary
+    answer_lookup = df.drop_duplicates(subset="intent").set_index("intent")["answer"].to_dict()   # Build a dictionary mapping each intent to its stored answer
+    joblib.dump(answer_lookup, f"{model_dir}/answers.pkl")              # Save the intent-to-answer lookup dictionary
 
-print("Model trained and saved to the 'model' folder.")                 # Confirm that training and saving completed successfully
+    print("Model trained and saved to the 'model' folder.")            # Confirm that training and saving completed successfully
+    return vectorizer, lr, answer_lookup                                # Return the trained objects directly so app.py can use them immediately without re-reading the pickle files
+
+## Run Directly
+
+if __name__ == "__main__":                                              # Only runs this block when the script is executed directly, not when imported
+    train_and_save()                                                    # Train and save the model using the default file paths

@@ -1,92 +1,387 @@
 [
-  {"question": "Hello", "intent": "greeting", "answer": "Hi there! How can I help you with your device today?"},
-  {"question": "Hi", "intent": "greeting", "answer": "Hi there! How can I help you with your device today?"},
-  {"question": "Hey", "intent": "greeting", "answer": "Hi there! How can I help you with your device today?"},
-  {"question": "Good morning", "intent": "greeting", "answer": "Hi there! How can I help you with your device today?"},
-  {"question": "Hi bot", "intent": "greeting", "answer": "Hi there! How can I help you with your device today?"},
-  
-  {"question": "Why does my battery drain so fast?", "intent": "battery_life", "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."},
-  {"question": "My phone battery dies quickly", "intent": "battery_life", "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."},
-  {"question": "Battery draining fast, what do I do", "intent": "battery_life", "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."},
-  {"question": "How can I improve battery life", "intent": "battery_life", "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."},
-  {"question": "Phone battery not lasting long", "intent": "battery_life", "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."},
-
-  {"question": "My screen is cracked, what do I do?", "intent": "screen_repair", "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."},
-  {"question": "Screen broke, can it be repaired?", "intent": "screen_repair", "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."},
-  {"question": "How much does screen replacement cost?", "intent": "screen_repair", "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."},
-  {"question": "Cracked display repair options", "intent": "screen_repair", "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."},
-  {"question": "My phone screen is damaged", "intent": "screen_repair", "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."},
-
-  {"question": "How long is my warranty?", "intent": "warranty_period", "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."},
-  {"question": "What does the warranty cover?", "intent": "warranty_period", "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."},
-  {"question": "Is my phone still under warranty?", "intent": "warranty_period", "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."},
-  {"question": "Warranty period for this device", "intent": "warranty_period", "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."},
-  {"question": "When does my warranty expire?", "intent": "warranty_period", "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."},
-
-  {"question": "Can I return my phone?", "intent": "return_policy", "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."},
-  {"question": "What is the return policy?", "intent": "return_policy", "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."},
-  {"question": "How do I return this device?", "intent": "return_policy", "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."},
-  {"question": "I want a refund for my order", "intent": "return_policy", "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."},
-  {"question": "Return window for purchases", "intent": "return_policy", "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."},
-  {"question": "Can I send this phone back?", "intent": "return_policy", "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."},
-
-  {"question": "Where is my order?", "intent": "order_tracking", "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."},
-  {"question": "How do I track my package?", "intent": "order_tracking", "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."},
-  {"question": "My order hasn't arrived yet", "intent": "order_tracking", "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."},
-  {"question": "Track my shipment", "intent": "order_tracking", "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."},
-  {"question": "When will my phone be delivered?", "intent": "order_tracking", "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."},
-
-  {"question": "Is there any discount available?", "intent": "price_discount", "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."},
-  {"question": "What's the price of this phone?", "intent": "price_discount", "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."},
-  {"question": "Any ongoing offers?", "intent": "price_discount", "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."},
-  {"question": "Can I get a student discount?", "intent": "price_discount", "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."},
-  {"question": "Price after discount", "intent": "price_discount", "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."},
-
-  {"question": "How do I update my phone's software?", "intent": "software_update", "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."},
-  {"question": "Is a new software update available?", "intent": "software_update", "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."},
-  {"question": "My phone needs an update", "intent": "software_update", "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."},
-  {"question": "How to install the latest OS version", "intent": "software_update", "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."},
-  {"question": "Software update failing", "intent": "software_update", "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."},
-
-  {"question": "I forgot my account password", "intent": "forgot_password", "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."},
-  {"question": "How do I reset my password?", "intent": "forgot_password", "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."},
-  {"question": "Can't log into my account", "intent": "forgot_password", "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."},
-  {"question": "Password reset link not working", "intent": "forgot_password", "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."},
-  {"question": "Locked out of my account", "intent": "forgot_password", "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."},
-
-  {"question": "My phone won't connect to WiFi", "intent": "wifi_connection", "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."},
-  {"question": "WiFi keeps disconnecting", "intent": "wifi_connection", "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."},
-  {"question": "How do I connect to a wireless network?", "intent": "wifi_connection", "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."},
-  {"question": "WiFi not working on my device", "intent": "wifi_connection", "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."},
-  {"question": "Can't join WiFi network", "intent": "wifi_connection", "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."},
-
-  {"question": "My storage is full, what do I do?", "intent": "storage_full", "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."},
-  {"question": "How do I free up space?", "intent": "storage_full", "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."},
-  {"question": "Phone says storage almost full", "intent": "storage_full", "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."},
-  {"question": "Not enough storage for update", "intent": "storage_full", "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."},
-  {"question": "Clear storage space", "intent": "storage_full", "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."},
-
-  {"question": "My camera isn't working", "intent": "camera_issue", "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."},
-  {"question": "Camera app keeps crashing", "intent": "camera_issue", "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."},
-  {"question": "Photos are blurry", "intent": "camera_issue", "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."},
-  {"question": "Camera won't focus", "intent": "camera_issue", "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."},
-  {"question": "Rear camera not opening", "intent": "camera_issue", "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."},
-
-  {"question": "How do I talk to a human agent?", "intent": "contact_support", "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."},
-  {"question": "I need to contact customer support", "intent": "contact_support", "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."},
-  {"question": "Is there a support phone number?", "intent": "contact_support", "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."},
-  {"question": "Connect me to a representative", "intent": "contact_support", "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."},
-  {"question": "Talk to customer service", "intent": "contact_support", "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."},
-
-  {"question": "What is the capital of France?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "What's the weather like today?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "Can you tell me a joke?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "Who won the cricket match yesterday?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "What is 2 plus 2?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "Hi, how are you?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "What is your name?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "Recommend me a good movie", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "How do I cook pasta?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"},
-  {"question": "What time is it in New York?", "intent": "out_of_scope", "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"}
-
+  {
+    "question": "Hello",
+    "intent": "greeting",
+    "answer": "Hi there! How can I help you with your device today?"
+  },
+  {
+    "question": "Hi",
+    "intent": "greeting",
+    "answer": "Hi there! How can I help you with your device today?"
+  },
+  {
+    "question": "Hey",
+    "intent": "greeting",
+    "answer": "Hi there! How can I help you with your device today?"
+  },
+  {
+    "question": "Good morning",
+    "intent": "greeting",
+    "answer": "Hi there! How can I help you with your device today?"
+  },
+  {
+    "question": "Hi bot",
+    "intent": "greeting",
+    "answer": "Hi there! How can I help you with your device today?"
+  },
+  {
+    "question": "Why does my battery drain so fast?",
+    "intent": "battery_life",
+    "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."
+  },
+  {
+    "question": "My phone battery dies quickly",
+    "intent": "battery_life",
+    "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."
+  },
+  {
+    "question": "Battery draining fast, what do I do",
+    "intent": "battery_life",
+    "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."
+  },
+  {
+    "question": "How can I improve battery life",
+    "intent": "battery_life",
+    "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."
+  },
+  {
+    "question": "Phone battery not lasting long",
+    "intent": "battery_life",
+    "answer": "Battery drain is often caused by background apps or screen brightness. Try enabling battery saver mode in Settings > Battery, and check which apps are using the most power."
+  },
+  {
+    "question": "My screen is cracked, what do I do?",
+    "intent": "screen_repair",
+    "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."
+  },
+  {
+    "question": "Screen broke, can it be repaired?",
+    "intent": "screen_repair",
+    "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."
+  },
+  {
+    "question": "How much does screen replacement cost?",
+    "intent": "screen_repair",
+    "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."
+  },
+  {
+    "question": "Cracked display repair options",
+    "intent": "screen_repair",
+    "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."
+  },
+  {
+    "question": "My phone screen is damaged",
+    "intent": "screen_repair",
+    "answer": "You can book a screen repair through our service center or authorized partners. Repair cost depends on your model and warranty status, so check the Support app for an instant quote."
+  },
+  {
+    "question": "How long is my warranty?",
+    "intent": "warranty_period",
+    "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."
+  },
+  {
+    "question": "What does the warranty cover?",
+    "intent": "warranty_period",
+    "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."
+  },
+  {
+    "question": "Is my phone still under warranty?",
+    "intent": "warranty_period",
+    "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."
+  },
+  {
+    "question": "Warranty period for this device",
+    "intent": "warranty_period",
+    "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."
+  },
+  {
+    "question": "When does my warranty expire?",
+    "intent": "warranty_period",
+    "answer": "Standard warranty covers manufacturing defects for 12 months from the date of purchase. You can check your exact warranty status by entering your IMEI number on our support page."
+  },
+  {
+    "question": "Can I return my phone?",
+    "intent": "return_policy",
+    "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."
+  },
+  {
+    "question": "What is the return policy?",
+    "intent": "return_policy",
+    "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."
+  },
+  {
+    "question": "How do I return this device?",
+    "intent": "return_policy",
+    "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."
+  },
+  {
+    "question": "I want a refund for my order",
+    "intent": "return_policy",
+    "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."
+  },
+  {
+    "question": "Return window for purchases",
+    "intent": "return_policy",
+    "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."
+  },
+  {
+    "question": "Can I send this phone back?",
+    "intent": "return_policy",
+    "answer": "Devices can be returned within 7 days of delivery if unused and in original packaging. Go to Orders > Return Item to start the process."
+  },
+  {
+    "question": "Where is my order?",
+    "intent": "order_tracking",
+    "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."
+  },
+  {
+    "question": "How do I track my package?",
+    "intent": "order_tracking",
+    "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."
+  },
+  {
+    "question": "My order hasn't arrived yet",
+    "intent": "order_tracking",
+    "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."
+  },
+  {
+    "question": "Track my shipment",
+    "intent": "order_tracking",
+    "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."
+  },
+  {
+    "question": "When will my phone be delivered?",
+    "intent": "order_tracking",
+    "answer": "You can track your order in real time under My Orders > Track Package, using the tracking ID sent to your email."
+  },
+  {
+    "question": "Is there any discount available?",
+    "intent": "price_discount",
+    "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."
+  },
+  {
+    "question": "What's the price of this phone?",
+    "intent": "price_discount",
+    "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."
+  },
+  {
+    "question": "Any ongoing offers?",
+    "intent": "price_discount",
+    "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."
+  },
+  {
+    "question": "Can I get a student discount?",
+    "intent": "price_discount",
+    "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."
+  },
+  {
+    "question": "Price after discount",
+    "intent": "price_discount",
+    "answer": "Current offers and student discounts are listed on our Deals page, updated weekly. Prices vary by storage variant and region."
+  },
+  {
+    "question": "How do I update my phone's software?",
+    "intent": "software_update",
+    "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."
+  },
+  {
+    "question": "Is a new software update available?",
+    "intent": "software_update",
+    "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."
+  },
+  {
+    "question": "My phone needs an update",
+    "intent": "software_update",
+    "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."
+  },
+  {
+    "question": "How to install the latest OS version",
+    "intent": "software_update",
+    "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."
+  },
+  {
+    "question": "Software update failing",
+    "intent": "software_update",
+    "answer": "Go to Settings > System > Software Update to check for and install the latest version. Make sure you are connected to WiFi and have at least 50 percent battery."
+  },
+  {
+    "question": "I forgot my account password",
+    "intent": "forgot_password",
+    "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."
+  },
+  {
+    "question": "How do I reset my password?",
+    "intent": "forgot_password",
+    "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."
+  },
+  {
+    "question": "Can't log into my account",
+    "intent": "forgot_password",
+    "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."
+  },
+  {
+    "question": "Password reset link not working",
+    "intent": "forgot_password",
+    "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."
+  },
+  {
+    "question": "Locked out of my account",
+    "intent": "forgot_password",
+    "answer": "Click Forgot Password on the login screen and follow the link sent to your registered email to reset it securely."
+  },
+  {
+    "question": "My phone won't connect to WiFi",
+    "intent": "wifi_connection",
+    "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."
+  },
+  {
+    "question": "WiFi keeps disconnecting",
+    "intent": "wifi_connection",
+    "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."
+  },
+  {
+    "question": "How do I connect to a wireless network?",
+    "intent": "wifi_connection",
+    "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."
+  },
+  {
+    "question": "WiFi not working on my device",
+    "intent": "wifi_connection",
+    "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."
+  },
+  {
+    "question": "Can't join WiFi network",
+    "intent": "wifi_connection",
+    "answer": "Try forgetting the network and reconnecting under Settings > WiFi. If it persists, restart your router and check for a software update."
+  },
+  {
+    "question": "My storage is full, what do I do?",
+    "intent": "storage_full",
+    "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."
+  },
+  {
+    "question": "How do I free up space?",
+    "intent": "storage_full",
+    "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."
+  },
+  {
+    "question": "Phone says storage almost full",
+    "intent": "storage_full",
+    "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."
+  },
+  {
+    "question": "Not enough storage for update",
+    "intent": "storage_full",
+    "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."
+  },
+  {
+    "question": "Clear storage space",
+    "intent": "storage_full",
+    "answer": "Go to Settings > Storage to see what's taking up space, and consider clearing cached data or moving photos to cloud storage."
+  },
+  {
+    "question": "My camera isn't working",
+    "intent": "camera_issue",
+    "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."
+  },
+  {
+    "question": "Camera app keeps crashing",
+    "intent": "camera_issue",
+    "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."
+  },
+  {
+    "question": "Photos are blurry",
+    "intent": "camera_issue",
+    "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."
+  },
+  {
+    "question": "Camera won't focus",
+    "intent": "camera_issue",
+    "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."
+  },
+  {
+    "question": "Rear camera not opening",
+    "intent": "camera_issue",
+    "answer": "Try restarting your phone and clearing the camera app's cache under Settings > Apps > Camera > Storage > Clear Cache. If the issue persists, it may need a service check."
+  },
+  {
+    "question": "How do I talk to a human agent?",
+    "intent": "contact_support",
+    "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."
+  },
+  {
+    "question": "I need to contact customer support",
+    "intent": "contact_support",
+    "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."
+  },
+  {
+    "question": "Is there a support phone number?",
+    "intent": "contact_support",
+    "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."
+  },
+  {
+    "question": "Connect me to a representative",
+    "intent": "contact_support",
+    "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."
+  },
+  {
+    "question": "Talk to customer service",
+    "intent": "contact_support",
+    "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."
+  },
+  {
+    "question": "What is the capital of France?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What's the weather like today?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Can you tell me a joke?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Who won the cricket match yesterday?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What is 2 plus 2?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Hi, how are you?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What is your name?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Recommend me a good movie",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "How do I cook pasta?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What time is it in New York?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "does this phone support 5G?",
+    "intent": "does_this_phone_support",
+    "answer": "Yes, all our current models support ultra-fast 5G networks."
+  }
 ]
