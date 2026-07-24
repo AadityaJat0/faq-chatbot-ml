@@ -24,7 +24,7 @@ A phone customer-support chatbot that upgrades keyword-matching with a real mach
 faq-chatbot-ml/
 ├── faq_data.json      # Training data: question, intent, answer
 ├── train_model.py     # Trains the TF-IDF + Logistic Regression model
-├── chatbot.py         # Terminal version, for quick model testing
+├── chatbot.py         # Terminal version
 ├── app.py             # Streamlit web UI (the real product)
 └── requirements.txt   # Dependencies list
 ```
@@ -39,9 +39,10 @@ source venv/bin/activate      # Windows: venv\Scripts\activate
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Train the model (once, or after editing faq_data.json)
-python3 train_model.py
-
-# 4. Launch the chat interface
+# 3. Launch the chat interface
 streamlit run app.py
 ```
+
+The Streamlit app builds its model in memory from the tracked `faq_data.json`
+file on every fresh deployment. It never depends on generated `model/` files,
+so a fresh Streamlit Cloud container cannot fail because those files are absent.

@@ -2,13 +2,11 @@
 
 ## Importing Libraries
 
-import joblib                                                           # Import joblib to load the saved vectorizer, model and answer lookup
+from train_model import train_model                                      # Train from the source FAQ data so the terminal app also works on a fresh clone
 
-## Loading the Saved Model
+## Building the Model
 
-vectorizer = joblib.load("model/vectorizer.pkl")                        # Load the fitted TfidfVectorizer saved during training
-lr = joblib.load("model/classifier.pkl")                                # Load the trained LogisticRegression model
-answers = joblib.load("model/answers.pkl")                              # Load the intent-to-answer lookup dictionary
+vectorizer, lr, answers = train_model()                                  # Build the model directly from faq_data.json; no pickle files are required
 
 CONFIDENCE_THRESHOLD = 0.10                                              # Minimum top-class probability required before considering a real-topic prediction trustworthy
 MARGIN_THRESHOLD = 0.05                                                  # Minimum gap required between the top and second-best prediction

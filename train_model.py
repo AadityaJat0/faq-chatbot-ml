@@ -7,12 +7,13 @@ import pandas as pd                                                     # Import
 from sklearn.feature_extraction.text import TfidfVectorizer             # Import TfidfVectorizer from scikit-learn (Reference: TfidfVectorizer class https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html)
 from sklearn.linear_model import LogisticRegression                     # Import LogisticRegression from scikit-learn
 import joblib                                                           # Import joblib to save and load the trained model and vectorizer
-import os                                                                # Import os to create the folder that stores the saved model files
+from pathlib import Path                                                 # Import Path for reliable file paths on local machines and Streamlit Cloud
 
 ## Training Function
 
-def train_and_save(data_path="faq_data.json", model_dir="model"):       # Wrapped in a function so app.py can call this directly to retrain on the fly, not just run it as a standalone script
-    with open(data_path) as f:                                          # Open the FAQ dataset containing question, intent and answer for each entry
+def train_model(data_path="faq_data.json"):
+    data_path = Path(data_path)
+    with data_path.open() as f:                                         # Open the FAQ dataset containing question, intent and answer for each entry
         data = json.load(f)                                             # Load the JSON data into a list of dictionaries
 
     df = pd.DataFrame(data)                                             # Convert the list of dictionaries into a DataFrame for easier handling
@@ -31,17 +32,19 @@ def train_and_save(data_path="faq_data.json", model_dir="model"):       # Wrappe
     lr = LogisticRegression(max_iter=1000, class_weight='balanced')                              # Initialize LogisticRegression with a higher max_iter so it reliably converges across this many intent classes (Reference: LogisticRegression class https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
     lr.fit(X_vectorized, Y)                                             # Fit the logistic regression model using the vectorized questions and their intents (Reference: fit method https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression.fit)
 
-    ## Saving the Model
-
-    os.makedirs(model_dir, exist_ok=True)                               # Create the model folder if it does not already exist
-    joblib.dump(vectorizer, f"{model_dir}/vectorizer.pkl")              # Save the fitted vectorizer so new questions can be transformed the same way later
-    joblib.dump(lr, f"{model_dir}/classifier.pkl")                      # Save the trained LogisticRegression model
-
     answer_lookup = df.drop_duplicates(subset="intent").set_index("intent")["answer"].to_dict()   # Build a dictionary mapping each intent to its stored answer
-    joblib.dump(answer_lookup, f"{model_dir}/answers.pkl")              # Save the intent-to-answer lookup dictionary
+    return vectorizer, lr, answer_lookup                                # Return the trained objects directly so the Streamlit app needs no model files
+
+def train_and_save(data_path="faq_data.json", model_dir="model"):
+    vectorizer, lr, answer_lookup = train_model(data_path)              # Train from the source JSON before optionally writing local artifacts
+    model_dir = Path(model_dir)
+    model_dir.mkdir(parents=True, exist_ok=True)                        # Create the model folder if it does not already exist
+    joblib.dump(vectorizer, model_dir / "vectorizer.pkl")               # Save the fitted vectorizer so the terminal script can reuse it later
+    joblib.dump(lr, model_dir / "classifier.pkl")                       # Save the trained LogisticRegression model
+    joblib.dump(answer_lookup, model_dir / "answers.pkl")               # Save the intent-to-answer lookup dictionary
 
     print("Model trained and saved to the 'model' folder.")            # Confirm that training and saving completed successfully
-    return vectorizer, lr, answer_lookup                                # Return the trained objects directly so app.py can use them immediately without re-reading the pickle files
+    return vectorizer, lr, answer_lookup
 
 ## Run Directly
 

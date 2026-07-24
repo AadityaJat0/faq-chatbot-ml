@@ -4,9 +4,13 @@
 
 import json                                                              # Import json to read and update the FAQ dataset when the bot learns something new
 import re                                                                 # Import re to help turn a new question into a short intent name
-import joblib                                                            # Import joblib to load the saved vectorizer, model and answer lookup
+from hashlib import sha256                                                # Hash the FAQ contents so a changed dataset gets a new cached model
+from pathlib import Path                                                  # Resolve project files without depending on Streamlit's working directory
 import streamlit as st                                        # Import streamlit to build the browser-based chat interface
-from train_model import train_and_save                                  # Import the training function so we can retrain instantly after learning something new
+from train_model import train_model                                     # Import the in-memory training function so fresh deployments need no model files
+
+APP_DIR = Path(__file__).resolve().parent
+DATA_PATH = APP_DIR / "faq_data.json"
 
 ## Page Setup
 
@@ -22,12 +26,27 @@ div[data-testid="stChatMessageContent"] { font-size: 0.95rem; }
 st.title("📱 Phone Support Chatbot")                                     # Display a title at the top of the page
 st.caption("Ask about battery, warranty, orders, WiFi, and more — powered by a Logistic Regression intent classifier that learns new answers on the fly.")   # Short subtitle explaining what the bot does
 
-## Loading the Model (once per session)
+## Building the Model from the Tracked Training Data
 
-if "vectorizer" not in st.session_state:                               # Only load the model the first time this session runs
-    st.session_state.vectorizer = joblib.load("model/vectorizer.pkl")  # Load the fitted TfidfVectorizer saved during training
-    st.session_state.lr = joblib.load("model/classifier.pkl")          # Load the trained LogisticRegression model
-    st.session_state.answers = joblib.load("model/answers.pkl")        # Load the intent-to-answer lookup dictionary
+def dataset_hash():
+    return sha256(DATA_PATH.read_bytes()).hexdigest()
+
+@st.cache_resource(show_spinner="Preparing the chatbot model...")
+def build_model(current_dataset_hash):
+    # The hash invalidates this cache after a learned answer is saved. The web
+    # app trains from versioned JSON and never needs pre-generated pickle files.
+    return train_model(data_path=DATA_PATH)
+
+def refresh_session_model():
+    current_dataset_hash = dataset_hash()
+    vectorizer, lr, answers = build_model(current_dataset_hash)
+    st.session_state.vectorizer = vectorizer
+    st.session_state.lr = lr
+    st.session_state.answers = answers
+    st.session_state.model_dataset_hash = current_dataset_hash
+
+if st.session_state.get("model_dataset_hash") != dataset_hash():
+    refresh_session_model()
 
 if "messages" not in st.session_state:                                  # Only create the chat history the first time this session runs
     st.session_state.messages = []                                     # Start with an empty conversation
@@ -49,7 +68,7 @@ with st.sidebar:                                                         # Sideb
 
     st.divider()                                                        # Visual separator before the stats block
     st.subheader("Model stats")                                        # Heading for the live stats section
-    with open("faq_data.json") as f:                                   # Open the current dataset to compute live stats
+    with DATA_PATH.open() as f:                                         # Open the current dataset to compute live stats
         current_data = json.load(f)                                    # Load it so we can count examples and intents
     st.metric("Training examples", len(current_data))                 # Show the total number of question-intent-answer rows
     st.metric("Intents recognized", len({row["intent"] for row in current_data}))   # Show the number of distinct intents, including any learned on the fly - this number visibly increases once you teach it something new
@@ -69,7 +88,7 @@ def slugify_question(question, existing_intents):                      # Turn a 
 ## Helper Function to Learn a New Answer
 
 def learn_new_answer(question, answer):                                 # Save a brand-new question and answer, then retrain the model on the spot
-    with open("faq_data.json") as f:                                    # Open the current FAQ dataset
+    with DATA_PATH.open() as f:                                         # Open the current FAQ dataset
         data = json.load(f)                                            # Load it into a list of dictionaries
 
     existing_intents = {entry["intent"] for entry in data}              # Collect every intent name already in use
@@ -77,14 +96,11 @@ def learn_new_answer(question, answer):                                 # Save a
 
     data.append({"question": question, "intent": new_intent, "answer": answer})   # Add the new question, intent and answer as a new entry
 
-    with open("faq_data.json", "w") as f:                               # Open the file again, this time for writing
+    with DATA_PATH.open("w") as f:                                      # Open the file again, this time for writing
         json.dump(data, f, indent=2)                                   # Save the updated dataset back to disk in readable JSON format
 
     with st.spinner("Learning that one now..."):                       # Show a small spinner while retraining, even though it takes under a second
-        vectorizer, lr, answers = train_and_save()                     # Retrain immediately on the updated dataset
-    st.session_state.vectorizer = vectorizer                           # Refresh the vectorizer stored in this session
-    st.session_state.lr = lr                                           # Refresh the classifier stored in this session
-    st.session_state.answers = answers                                 # Refresh the answer lookup stored in this session
+        refresh_session_model()                                         # Retrain immediately from the updated JSON data
 
 ## Helper Function to Build the Confidence Badge
 
