@@ -1,4 +1,6 @@
-# FAQ Chatbot — ML-Powered Intent Classification
+# ResolveBot – FAQ Chatbot — ML-Powered Intent Classification
+
+**Live Demo:** [Click here to chat with the bot!](https://faq-chatbot-ml.streamlit.app)
 
 A phone customer-support chatbot that upgrades keyword-matching with a real machine learning intent classifier. Built as a mini-project combining **Python for Automation** and **Python for Machine Learning** (GTU Skill Based Training, Spoken Tutorial, EduPyramids, SINE, IIT Bombay).
 
