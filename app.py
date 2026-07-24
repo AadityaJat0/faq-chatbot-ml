@@ -5,7 +5,8 @@
 import json                                                              # Import json to read and update the FAQ dataset when the bot learns something new
 import re                                                                 # Import re to help turn a new question into a short intent name
 import joblib                                                            # Import joblib to load the saved vectorizer, model and answer lookup
-import streamlit as st                                                   # Import streamlit to build the browser-based chat interface
+import streamlit as st
+import os                                                   # Import streamlit to build the browser-based chat interface
 from train_model import train_and_save                                  # Import the training function so we can retrain instantly after learning something new
 
 ## Page Setup
@@ -24,7 +25,9 @@ st.caption("Ask about battery, warranty, orders, WiFi, and more — powered by a
 
 ## Loading the Model (once per session)
 
-if "vectorizer" not in st.session_state:                                # Only load the model the first time this session runs
+if "vectorizer" not in st.session_state:
+    if not os.path.exists("model/vectorizer.pkl"):                      # If the model files don't exist (like on a fresh Cloud deploy)...
+        train_and_save()                                                # ...train them right now!                                # Only load the model the first time this session runs
     st.session_state.vectorizer = joblib.load("model/vectorizer.pkl")  # Load the fitted TfidfVectorizer saved during training
     st.session_state.lr = joblib.load("model/classifier.pkl")          # Load the trained LogisticRegression model
     st.session_state.answers = joblib.load("model/answers.pkl")        # Load the intent-to-answer lookup dictionary
