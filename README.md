@@ -31,7 +31,7 @@ faq-chatbot-ml/
 
 ## Running it
 
-\`\`\`bash
+```bash
 # 1. Create and activate a virtual environment
 python3 -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
@@ -44,4 +44,4 @@ python3 train_model.py
 
 # 4. Launch the chat interface
 streamlit run app.py
-\`\`\`
+```
