@@ -82,12 +82,13 @@ def configured_history_store() -> SupabaseHistoryStore | None:
 
 
 def cookie_manager():
-    """Keep one CookieManager component for the lifetime of a Streamlit session."""
-    if "cookie_manager" not in st.session_state:
-        st.session_state.cookie_manager = stx.CookieManager(
-            key="resolvebot-cookie-manager"
-        )
-    return st.session_state.cookie_manager
+    """Read browser cookies on every rerun.
+
+    Components report their browser-side value back to Streamlit on a rerun, so
+    keeping the component object in session state would leave it with its first
+    (usually empty) cookie snapshot.
+    """
+    return stx.CookieManager(key="resolvebot-cookie-manager")
 
 
 def _cookie_is_secure() -> bool:
@@ -114,15 +115,29 @@ def _save_history_token(cookie_store, token: str) -> None:
 
 def history_access_token(cookie_store) -> str:
     """Get or create the browser-held secret used to find one saved chat."""
-    existing = st.session_state.get("history_access_token")
-    if existing:
-        return existing
+    browser_token = cookie_store.get(HISTORY_COOKIE_NAME)
 
-    token = cookie_store.get(HISTORY_COOKIE_NAME)
-    if not token:
-        token = secrets.token_urlsafe(32)
-        _save_history_token(cookie_store, token)
+    # On a brand-new Streamlit session the component first returns its default
+    # value before the browser has reported its real cookies. Render only that
+    # component once, then let its callback rerun the app. This prevents an
+    # existing visitor token from being replaced before it can be read.
+    if "cookie_read_complete" not in st.session_state and not browser_token:
+        st.session_state.cookie_read_complete = True
+        st.stop()
 
+    session_token = st.session_state.get("history_access_token")
+    if browser_token:
+        if browser_token != session_token:
+            st.session_state.history_access_token = browser_token
+            st.session_state.pop("history_loaded_for_mode", None)
+            st.session_state.messages = []
+        return browser_token
+
+    if session_token:
+        return session_token
+
+    token = secrets.token_urlsafe(32)
+    _save_history_token(cookie_store, token)
     st.session_state.history_access_token = token
     return token
 
