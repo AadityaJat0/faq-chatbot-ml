@@ -40,7 +40,7 @@ class SupabaseHistoryStore:
         try:
             response = (
                 self._client.table("messages")
-                .select("id, role, content, created_at")
+                .select("id, role, content, prediction_badge, created_at")
                 .eq("conversation_id", conversation_id)
                 .order("created_at")
                 .execute()
@@ -49,15 +49,18 @@ class SupabaseHistoryStore:
             raise HistoryStoreError("ResolveBot could not load this chat history.") from exc
 
         rows = response.data or []
-        return [
-            {
+        messages = []
+        for row in rows:
+            message = {
                 "id": str(row["id"]),
                 "role": str(row["role"]),
                 "content": str(row["content"]),
                 "created_at": str(row["created_at"]),
             }
-            for row in rows
-        ]
+            if row.get("prediction_badge"):
+                message["badge"] = str(row["prediction_badge"])
+            messages.append(message)
+        return messages
 
     def save_messages(
         self, access_token: str, messages: Sequence[Mapping[str, Any]]
@@ -169,10 +172,16 @@ class SupabaseHistoryStore:
         if len(content) > MAX_MESSAGE_LENGTH:
             raise ValueError("Message is too long to save.")
 
-        return {
+        row = {
             "id": str(message["id"]),
             "conversation_id": conversation_id,
             "role": role,
             "content": content,
             "created_at": str(message["created_at"]),
         }
+        if message.get("badge"):
+            badge = str(message["badge"])
+            if len(badge) > MAX_MESSAGE_LENGTH:
+                raise ValueError("Message indicator is too long to save.")
+            row["prediction_badge"] = badge
+        return row

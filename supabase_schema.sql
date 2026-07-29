@@ -15,8 +15,14 @@ create table if not exists public.messages (
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   role text not null check (role in ('user', 'assistant')),
   content text not null check (char_length(content) <= 4000),
+  prediction_badge text check (char_length(prediction_badge) <= 4000),
   created_at timestamptz not null default now()
 );
+
+-- Keeps colour-coded prediction indicators after a saved chat is reopened.
+-- Safe to run on existing ResolveBot projects created before this column existed.
+alter table public.messages
+  add column if not exists prediction_badge text check (char_length(prediction_badge) <= 4000);
 
 create index if not exists messages_conversation_created_at_idx
   on public.messages (conversation_id, created_at);

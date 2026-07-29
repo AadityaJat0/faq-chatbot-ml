@@ -150,13 +150,17 @@ def replace_history_access_token(cookie_store) -> str:
     return token
 
 
-def new_message(role: str, content: str) -> dict[str, str]:
-    return {
+def new_message(role: str, content: str, badge: str | None = None) -> dict[str, str]:
+    """Create a chat message, optionally keeping its prediction indicator."""
+    message = {
         "id": str(uuid4()),
         "role": role,
         "content": content,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    if badge:
+        message["badge"] = badge
+    return message
 
 
 def initialize_chat_history(
@@ -204,8 +208,28 @@ def persist_messages(
         return False
 
 
-def resolve_reply(prompt: str) -> tuple[str, str | None]:
-    """Return ResolveBot's reply and an optional question awaiting feedback."""
+def confidence_badge_html(
+    intent: str, confidence: float, margin: float, is_confident: bool
+) -> str:
+    """Build the green, amber, or red prediction indicator shown below a reply."""
+    if intent == "out_of_scope":
+        color, background, label = "#b45309", "#fef3c7", "Off-topic"
+    elif is_confident:
+        color, background, label = "#15803d", "#dcfce7", "Confident match"
+    else:
+        color, background, label = "#b91c1c", "#fee2e2", "Low confidence"
+
+    return (
+        f'<div style="display:inline-block;background:{background};color:{color};'
+        "border-radius:999px;padding:2px 12px;font-size:0.75rem;"
+        'font-weight:600;margin:6px 0;">'
+        f"{label} &middot; {intent} &middot; confidence {confidence:.2f}"
+        f" &middot; margin {margin:.2f}</div>"
+    )
+
+
+def resolve_reply(prompt: str) -> tuple[str, str | None, str]:
+    """Return a reply, optional feedback question, and its prediction indicator."""
     vectorizer = st.session_state.vectorizer
     classifier = st.session_state.classifier
     answers = st.session_state.answers
@@ -219,16 +243,18 @@ def resolve_reply(prompt: str) -> tuple[str, str | None]:
     margin = sorted_probabilities[0] - sorted_probabilities[1]
 
     is_confident = confidence >= 0.10 and margin >= 0.05
+    badge = confidence_badge_html(best_intent, confidence, margin, is_confident)
     if best_intent == "out_of_scope":
-        return answers["out_of_scope"], None
+        return answers["out_of_scope"], None, badge
     if is_confident:
-        return answers[best_intent], None
+        return answers[best_intent], None, badge
 
     return (
         "I don't have a verified answer for that yet. If you'd like to help "
         "improve ResolveBot, type the answer you expected and I’ll save it for "
         "the project owner to review.",
         prompt,
+        badge,
     )
 
 
@@ -322,6 +348,8 @@ for message in st.session_state.messages:
     avatar = "🧑" if message["role"] == "user" else "🤖"
     with st.chat_message(message["role"], avatar=avatar):
         st.write(message["content"])
+        if message.get("badge"):
+            st.markdown(message["badge"], unsafe_allow_html=True)
 
 
 clicked_suggestion = None
@@ -353,6 +381,7 @@ if prompt:
         if st.session_state.awaiting_feedback_for is not None:
             feedback_question = st.session_state.awaiting_feedback_for
             st.session_state.awaiting_feedback_for = None
+            badge = None
             if history_store is None:
                 reply = (
                     "Thanks for the suggestion. The feedback service has not been "
@@ -369,11 +398,14 @@ if prompt:
                     reply = "I couldn't save that suggestion right now. Please try again later."
             st.write(reply)
         else:
-            reply, feedback_question = resolve_reply(prompt)
+            reply, feedback_question, badge = resolve_reply(prompt)
             st.session_state.awaiting_feedback_for = feedback_question
             st.write(reply)
 
-    assistant_message = new_message("assistant", reply)
+        if badge:
+            st.markdown(badge, unsafe_allow_html=True)
+
+    assistant_message = new_message("assistant", reply, badge)
     st.session_state.messages.append(assistant_message)
     persist_messages(history_store, access_token, [user_message, assistant_message])
 

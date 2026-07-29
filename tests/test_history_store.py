@@ -88,6 +88,22 @@ class HistoryStoreTests(unittest.TestCase):
             "conversation_id", "conversation-123"
         )
 
+    def test_prediction_badge_is_saved_with_an_assistant_message(self):
+        store = self.build_store()
+        self.configure_existing_conversation()
+        message = {
+            "id": "c0de5b94-6030-4faa-b9e7-11ab776db4f5",
+            "role": "assistant",
+            "content": "Try enabling battery saver mode.",
+            "badge": "<div>Confident match</div>",
+            "created_at": "2026-07-29T00:00:00+00:00",
+        }
+
+        store.save_messages("browser-secret-token", [message])
+
+        saved_row = self.messages.upsert.call_args.args[0][0]
+        self.assertEqual(saved_row["prediction_badge"], message["badge"])
+
     def test_invalid_message_is_rejected_before_database_write(self):
         store = self.build_store()
         self.configure_existing_conversation()
