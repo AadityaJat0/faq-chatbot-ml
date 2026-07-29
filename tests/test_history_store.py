@@ -59,6 +59,7 @@ class HistoryStoreTests(unittest.TestCase):
                     "conversation_id": "conversation-id",
                     "role": "user",
                     "content": message["content"],
+                    "prediction_badge": None,
                     "created_at": message["created_at"],
                 }
             ]

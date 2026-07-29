@@ -177,6 +177,10 @@ class SupabaseHistoryStore:
             "conversation_id": conversation_id,
             "role": role,
             "content": content,
+            # PostgREST uses the fields from a bulk request consistently across
+            # every row. Include this nullable field for user messages too, so
+            # an assistant badge in the same save is not dropped.
+            "prediction_badge": None,
             "created_at": str(message["created_at"]),
         }
         if message.get("badge"):
