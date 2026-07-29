@@ -1,189 +1,361 @@
-# FAQ Chatbot - Streamlit UI
+"""ResolveBot's Streamlit interface."""
 
-## Importing Libraries
+from __future__ import annotations
 
-import json                                                              # Import json to read and update the FAQ dataset when the bot learns something new
-import re                                                                 # Import re to help turn a new question into a short intent name
-from hashlib import sha256                                                # Hash the FAQ contents so a changed dataset gets a new cached model
-from pathlib import Path                                                  # Resolve project files without depending on Streamlit's working directory
-import streamlit as st                                        # Import streamlit to build the browser-based chat interface
-from train_model import train_model                                     # Import the in-memory training function so fresh deployments need no model files
+import json
+import secrets
+from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+from pathlib import Path
+from uuid import uuid4
+
+import extra_streamlit_components as stx
+import streamlit as st
+
+from history_store import HistoryStoreError, SupabaseHistoryStore
+from train_model import train_model
+
 
 APP_DIR = Path(__file__).resolve().parent
 DATA_PATH = APP_DIR / "faq_data.json"
+HISTORY_COOKIE_NAME = "resolvebot_history_token"
+HISTORY_COOKIE_LIFETIME = timedelta(days=180)
+MAX_INPUT_CHARS = 2_000
 
-## Page Setup
 
-st.set_page_config(page_title="Phone Support Chatbot", page_icon="📱", layout="centered")   # Set the browser tab title, icon and page width
+st.set_page_config(
+    page_title="ResolveBot | Phone Support Chatbot",
+    page_icon="🤖",
+    layout="centered",
+)
 
-st.markdown("""
-<style>
-.stChatMessage { border-radius: 14px; padding: 4px 2px; }
-div[data-testid="stChatMessageContent"] { font-size: 0.95rem; }
-</style>
-""", unsafe_allow_html=True)                                             # Small cosmetic CSS tweak - purely visual, app works identically if this does not apply on some Streamlit versions
+st.markdown(
+    """
+    <style>
+    .stChatMessage { border-radius: 14px; padding: 4px 2px; }
+    div[data-testid="stChatMessageContent"] { font-size: 0.95rem; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.title("📱 Phone Support Chatbot")                                     # Display a title at the top of the page
-st.caption("Ask about battery, warranty, orders, WiFi, and more — powered by a Logistic Regression intent classifier that learns new answers on the fly.")   # Short subtitle explaining what the bot does
 
-## Building the Model from the Tracked Training Data
-
-def dataset_hash():
+def dataset_hash() -> str:
+    """Invalidate the cached model when tracked training data changes."""
     return sha256(DATA_PATH.read_bytes()).hexdigest()
 
-@st.cache_resource(show_spinner="Preparing the chatbot model...")
-def build_model(current_dataset_hash):
-    # The hash invalidates this cache after a learned answer is saved. The web
-    # app trains from versioned JSON and never needs pre-generated pickle files.
+
+@st.cache_resource(show_spinner="Preparing ResolveBot...")
+def build_model(current_dataset_hash: str):
+    """Train from the tracked FAQ data; no generated model files are needed."""
+    del current_dataset_hash  # The cache key is intentionally the data hash.
     return train_model(data_path=DATA_PATH)
 
-def refresh_session_model():
+
+def refresh_session_model() -> None:
     current_dataset_hash = dataset_hash()
-    vectorizer, lr, answers = build_model(current_dataset_hash)
+    vectorizer, classifier, answers = build_model(current_dataset_hash)
     st.session_state.vectorizer = vectorizer
-    st.session_state.lr = lr
+    st.session_state.classifier = classifier
     st.session_state.answers = answers
     st.session_state.model_dataset_hash = current_dataset_hash
+
+
+@st.cache_resource(show_spinner=False)
+def connect_history_store(url: str, service_role_key: str) -> SupabaseHistoryStore:
+    """Create one reusable, server-side Supabase client."""
+    return SupabaseHistoryStore(url, service_role_key)
+
+
+def configured_history_store() -> SupabaseHistoryStore | None:
+    """Return persistent storage when private Supabase Secrets are configured."""
+    try:
+        config = st.secrets.get("supabase", {})
+        url = str(config.get("url", "")).strip()
+        service_role_key = str(config.get("service_role_key", "")).strip()
+    except Exception:
+        return None
+
+    if not url or not service_role_key:
+        return None
+    return connect_history_store(url, service_role_key)
+
+
+def cookie_manager():
+    """Keep one CookieManager component for the lifetime of a Streamlit session."""
+    if "cookie_manager" not in st.session_state:
+        st.session_state.cookie_manager = stx.CookieManager(
+            key="resolvebot-cookie-manager"
+        )
+    return st.session_state.cookie_manager
+
+
+def _cookie_is_secure() -> bool:
+    """Use Secure cookies on HTTPS deployments while keeping local testing usable."""
+    try:
+        return st.context.url.startswith("https://")
+    except Exception:
+        return False
+
+
+def _save_history_token(cookie_store, token: str) -> None:
+    write_number = st.session_state.get("history_cookie_write_number", 0) + 1
+    st.session_state.history_cookie_write_number = write_number
+    cookie_store.set(
+        HISTORY_COOKIE_NAME,
+        token,
+        key=f"resolvebot-history-token-{write_number}",
+        path="/",
+        expires_at=datetime.now(timezone.utc) + HISTORY_COOKIE_LIFETIME,
+        secure=_cookie_is_secure(),
+        same_site="lax",
+    )
+
+
+def history_access_token(cookie_store) -> str:
+    """Get or create the browser-held secret used to find one saved chat."""
+    existing = st.session_state.get("history_access_token")
+    if existing:
+        return existing
+
+    token = cookie_store.get(HISTORY_COOKIE_NAME)
+    if not token:
+        token = secrets.token_urlsafe(32)
+        _save_history_token(cookie_store, token)
+
+    st.session_state.history_access_token = token
+    return token
+
+
+def replace_history_access_token(cookie_store) -> str:
+    """Forget the deleted conversation and begin with a fresh browser token."""
+    token = secrets.token_urlsafe(32)
+    _save_history_token(cookie_store, token)
+    st.session_state.history_access_token = token
+    return token
+
+
+def new_message(role: str, content: str) -> dict[str, str]:
+    return {
+        "id": str(uuid4()),
+        "role": role,
+        "content": content,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def initialize_chat_history(
+    history_store: SupabaseHistoryStore | None, access_token: str
+) -> None:
+    """Load a persisted transcript once, without breaking a usable live session."""
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    if st.session_state.get("history_loaded"):
+        return
+
+    st.session_state.history_loaded = True
+    if history_store is None:
+        st.session_state.history_status = "session_only"
+        return
+
+    try:
+        st.session_state.messages = history_store.load_messages(access_token)
+        st.session_state.history_status = "saved"
+    except HistoryStoreError:
+        st.session_state.history_status = "unavailable"
+
+
+def persist_messages(
+    history_store: SupabaseHistoryStore | None,
+    access_token: str,
+    messages: list[dict[str, str]],
+) -> bool:
+    """Save the newest messages, while leaving the chat responsive on failure."""
+    if history_store is None:
+        return False
+
+    try:
+        history_store.save_messages(access_token, messages)
+        st.session_state.history_status = "saved"
+        return True
+    except (HistoryStoreError, ValueError):
+        st.session_state.history_status = "unavailable"
+        return False
+
+
+def resolve_reply(prompt: str) -> tuple[str, str | None]:
+    """Return ResolveBot's reply and an optional question awaiting feedback."""
+    vectorizer = st.session_state.vectorizer
+    classifier = st.session_state.classifier
+    answers = st.session_state.answers
+
+    question_vector = vectorizer.transform([prompt])
+    probabilities = classifier.predict_proba(question_vector)[0]
+    sorted_probabilities = sorted(probabilities, reverse=True)
+    best_index = probabilities.argmax()
+    best_intent = classifier.classes_[best_index]
+    confidence = sorted_probabilities[0]
+    margin = sorted_probabilities[0] - sorted_probabilities[1]
+
+    is_confident = confidence >= 0.10 and margin >= 0.05
+    if best_intent == "out_of_scope":
+        return answers["out_of_scope"], None
+    if is_confident:
+        return answers[best_intent], None
+
+    return (
+        "I don't have a verified answer for that yet. If you'd like to help "
+        "improve ResolveBot, type the answer you expected and I’ll save it for "
+        "the project owner to review.",
+        prompt,
+    )
+
 
 if st.session_state.get("model_dataset_hash") != dataset_hash():
     refresh_session_model()
 
-if "messages" not in st.session_state:                                  # Only create the chat history the first time this session runs
-    st.session_state.messages = []                                     # Start with an empty conversation
+if "awaiting_feedback_for" not in st.session_state:
+    # Preserve a user who happened to have the old live-learning state open
+    # while this version was deployed.
+    st.session_state.awaiting_feedback_for = st.session_state.pop(
+        "awaiting_answer", None
+    )
 
-if "awaiting_answer" not in st.session_state:                           # Tracks whether the bot just asked the user to teach it something
-    st.session_state.awaiting_answer = None                            # None means we are not currently waiting for a taught answer
+history_store = configured_history_store()
+browser_cookies = cookie_manager()
+access_token = history_access_token(browser_cookies)
+initialize_chat_history(history_store, access_token)
 
-CONFIDENCE_THRESHOLD = 0.10                                              # Minimum top-class probability required before even considering a real-topic prediction - left unchanged since raising it would also block the known-correct 0.119 return_policy match
-MARGIN_THRESHOLD = 0.05                                                  # Minimum gap required between the top and second-best prediction - catches cases where the top score looks acceptable but the model was really just guessing among similar options
 
-## Sidebar
+st.title("🤖 ResolveBot — Phone Support Chatbot")
+st.caption("Your phone support assistant for common device questions.")
+if st.session_state.history_status == "saved":
+    st.caption("✓ This chat is saved automatically for this browser.")
+elif st.session_state.history_status == "unavailable":
+    st.warning("This chat is visible now, but it could not be saved at the moment.")
+else:
+    st.caption("This chat is available for the current session.")
+st.caption("Avoid sharing passwords, PINs, OTPs, or other sensitive information.")
 
-with st.sidebar:                                                         # Sidebar panel with session controls and live model stats
-    st.subheader("Session")                                             # Sidebar heading
-    if st.button("Clear chat"):                                        # Button to reset the conversation without restarting the app
-        st.session_state.messages = []                                 # Empty out the chat history
-        st.session_state.awaiting_answer = None                        # Also reset the "waiting to be taught" state
-        st.rerun()                                                     # Immediately refresh the page to reflect the cleared chat
 
-    st.divider()                                                        # Visual separator before the stats block
-    st.subheader("Model stats")                                        # Heading for the live stats section
-    with DATA_PATH.open() as f:                                         # Open the current dataset to compute live stats
-        current_data = json.load(f)                                    # Load it so we can count examples and intents
-    st.metric("Training examples", len(current_data))                 # Show the total number of question-intent-answer rows
-    st.metric("Intents recognized", len({row["intent"] for row in current_data}))   # Show the number of distinct intents, including any learned on the fly - this number visibly increases once you teach it something new
+with st.sidebar:
+    st.subheader("Your chat")
+    if st.session_state.history_status == "saved":
+        st.success("Saved automatically")
+        st.caption(
+            "History returns on this browser and device. Clearing browser data or "
+            "using a different device starts a separate chat."
+        )
+    elif st.session_state.history_status == "unavailable":
+        st.warning("Saving is temporarily unavailable")
+    else:
+        st.info("Session-only chat")
 
-## Helper Function to Name a New Intent
+    delete_label = "Delete saved chat" if history_store else "Clear chat"
+    if st.button(delete_label, use_container_width=True):
+        st.session_state.confirm_delete = True
 
-def slugify_question(question, existing_intents):                      # Turn a brand-new question into a short, unique intent name
-    words = re.findall(r"[a-zA-Z0-9]+", question.lower())               # Pull out just the alphanumeric words, lowercased
-    base_slug = "_".join(words[:4]) or "custom_intent"                  # Join the first four words with underscores, fall back if the question had no usable words
-    slug = base_slug                                                    # Start with the base slug
-    counter = 2                                                         # Counter used only if the base slug is already taken
-    while slug in existing_intents:                                    # Keep checking until we find a slug that is not already used
-        slug = f"{base_slug}_{counter}"                                # Append a number to make it unique
-        counter += 1                                                   # Increase the counter for the next attempt if needed
-    return slug                                                        # Return the final, unique intent name
+    if st.session_state.get("confirm_delete"):
+        st.warning("This permanently removes the messages shown in this chat.")
+        confirm_col, cancel_col = st.columns(2)
+        with confirm_col:
+            delete_confirmed = st.button("Delete permanently", type="primary")
+        with cancel_col:
+            cancel_delete = st.button("Cancel")
 
-## Helper Function to Learn a New Answer
+        if cancel_delete:
+            st.session_state.confirm_delete = False
+            st.rerun()
 
-def learn_new_answer(question, answer):                                 # Save a brand-new question and answer, then retrain the model on the spot
-    with DATA_PATH.open() as f:                                         # Open the current FAQ dataset
-        data = json.load(f)                                            # Load it into a list of dictionaries
+        if delete_confirmed:
+            try:
+                if history_store is not None:
+                    history_store.delete_history(access_token)
+                st.session_state.messages = []
+                st.session_state.awaiting_feedback_for = None
+                st.session_state.confirm_delete = False
+                st.session_state.history_loaded = True
+                st.session_state.history_status = (
+                    "saved" if history_store is not None else "session_only"
+                )
+                replace_history_access_token(browser_cookies)
+                st.rerun()
+            except HistoryStoreError:
+                st.error("ResolveBot could not delete this chat. Please try again.")
 
-    existing_intents = {entry["intent"] for entry in data}              # Collect every intent name already in use
-    new_intent = slugify_question(question, existing_intents)          # Generate a unique intent name for this new question
+    st.divider()
+    with st.expander("About ResolveBot"):
+        with DATA_PATH.open() as data_file:
+            current_data = json.load(data_file)
+        st.metric("Training examples", len(current_data))
+        st.metric("Intents recognized", len({row["intent"] for row in current_data}))
+        st.caption(
+            "ResolveBot uses TF-IDF features and Logistic Regression to match "
+            "common phone-support intents."
+        )
 
-    data.append({"question": question, "intent": new_intent, "answer": answer})   # Add the new question, intent and answer as a new entry
 
-    with DATA_PATH.open("w") as f:                                      # Open the file again, this time for writing
-        json.dump(data, f, indent=2)                                   # Save the updated dataset back to disk in readable JSON format
+for message in st.session_state.messages:
+    avatar = "🧑" if message["role"] == "user" else "🤖"
+    with st.chat_message(message["role"], avatar=avatar):
+        st.write(message["content"])
 
-    with st.spinner("Learning that one now..."):                       # Show a small spinner while retraining, even though it takes under a second
-        refresh_session_model()                                         # Retrain immediately from the updated JSON data
 
-## Helper Function to Build the Confidence Badge
+clicked_suggestion = None
+if not st.session_state.messages:
+    st.write("Try one of these, or type your own question below:")
+    suggestions = [
+        "My battery drains fast",
+        "Track my order",
+        "Is there a student discount?",
+        "How do I reset my password?",
+    ]
+    suggestion_columns = st.columns(2)
+    for index, suggestion in enumerate(suggestions):
+        with suggestion_columns[index % len(suggestion_columns)]:
+            if st.button(suggestion, use_container_width=True):
+                clicked_suggestion = suggestion
 
-def confidence_badge_html(intent, confidence, margin, is_confident):    # Build a small colored HTML badge summarizing the model's prediction
-    if intent == "out_of_scope":                                       # Off-topic questions get an amber badge
-        color, bg, label = "#b45309", "#fef3c7", "off-topic"           # Amber text/background and label
-    elif is_confident:                                                  # Confident, trusted real-topic predictions get a green badge
-        color, bg, label = "#15803d", "#dcfce7", "confident match"     # Green text/background and label
-    else:                                                                # Anything that did not clear both checks gets a red badge
-        color, bg, label = "#b91c1c", "#fee2e2", "low confidence"      # Red text/background and label
-    return (f'<div style="display:inline-block;background:{bg};color:{color};'   # Self-contained inline-styled HTML pill, does not depend on Streamlit internal class names
-            f'border-radius:999px;padding:2px 12px;font-size:0.75rem;font-weight:600;margin:6px 0;">'
-            f'{label} &middot; {intent} &middot; confidence {confidence:.2f} &middot; margin {margin:.2f}</div>')
 
-## Displaying Past Messages
+typed_prompt = st.chat_input("Ask ResolveBot a question...", max_chars=MAX_INPUT_CHARS)
+prompt = clicked_suggestion or typed_prompt
 
-for message in st.session_state.messages:                               # Loop through every message saved so far in this session
-    avatar = "🧑" if message["role"] == "user" else "📱"                 # Use a person avatar for the user and a phone avatar for the assistant
-    with st.chat_message(message["role"], avatar=avatar):               # Render it in the correct chat bubble style
-        st.write(message["content"])                                   # Display the message text
-        if message.get("badge"):                                       # If this message has a stored confidence badge
-            st.markdown(message["badge"], unsafe_allow_html=True)      # Display the colored badge — DELETE this "if" block (2 lines) to hide the debug info entirely
+if prompt:
+    user_message = new_message("user", prompt)
+    st.session_state.messages.append(user_message)
+    with st.chat_message("user", avatar="🧑"):
+        st.write(prompt)
 
-## Suggested Questions
+    with st.chat_message("assistant", avatar="🤖"):
+        if st.session_state.awaiting_feedback_for is not None:
+            feedback_question = st.session_state.awaiting_feedback_for
+            st.session_state.awaiting_feedback_for = None
+            if history_store is None:
+                reply = (
+                    "Thanks for the suggestion. The feedback service has not been "
+                    "configured yet, so it could not be sent for review."
+                )
+            else:
+                try:
+                    history_store.save_feedback(access_token, feedback_question, prompt)
+                    reply = (
+                        "Thanks — your suggestion was saved for review. It will not "
+                        "change ResolveBot's verified answers until it has been checked."
+                    )
+                except (HistoryStoreError, ValueError):
+                    reply = "I couldn't save that suggestion right now. Please try again later."
+            st.write(reply)
+        else:
+            reply, feedback_question = resolve_reply(prompt)
+            st.session_state.awaiting_feedback_for = feedback_question
+            st.write(reply)
 
-clicked_suggestion = None                                                # Will hold whichever suggestion the user clicks, if any
-if not st.session_state.messages:                                       # Only show quick-start suggestions before the conversation has started
-    st.write("Try one of these, or type your own question below:")     # Small prompt above the suggestion buttons
-    suggestions = ["My battery drains fast", "Track my order", "Is there a student discount?", "How do I reset my password?"]   # A handful of common, in-scope example questions
-    suggestion_cols = st.columns(len(suggestions))                     # Lay the suggestion buttons out in equal-width columns
-    for col, suggestion in zip(suggestion_cols, suggestions):           # Loop through each column and its matching suggestion text
-        with col:                                                       # Place this button inside its column
-            if st.button(suggestion, use_container_width=True):        # Show the suggestion as a clickable button
-                clicked_suggestion = suggestion                        # Record which suggestion was clicked
+    assistant_message = new_message("assistant", reply)
+    st.session_state.messages.append(assistant_message)
+    persist_messages(history_store, access_token, [user_message, assistant_message])
 
-## Chat Input and Response Logic
-
-typed_prompt = st.chat_input("Ask a question...")                       # Display the chat input box at the bottom of the page
-prompt = clicked_suggestion or typed_prompt                             # Use whichever came in - a clicked suggestion takes priority if both somehow fire in the same run
-
-if prompt:                                                               # Only run this block when the user has actually typed something or clicked a suggestion
-    st.session_state.messages.append({"role": "user", "content": prompt})   # Save the user's message to the chat history
-    with st.chat_message("user", avatar="🧑"):                          # Render the user's message immediately
-        st.write(prompt)                                               # Display what the user typed
-
-    with st.chat_message("assistant", avatar="📱"):                     # Render the bot's response in its own chat bubble
-        if st.session_state.awaiting_answer is not None:                # Check whether the bot is currently waiting to be taught an answer
-            learn_new_answer(st.session_state.awaiting_answer, prompt) # Save the new question and answer, then retrain the model immediately
-            reply = "Got it, I'll remember that from now on!"          # Confirm that the bot has learned the new answer
-            st.write(reply)                                            # Display the confirmation
-            st.session_state.messages.append({"role": "assistant", "content": reply})   # Save the confirmation to the chat history
-            st.session_state.awaiting_answer = None                    # Stop waiting, since the bot has now learned the answer
-
-        else:                                                            # Otherwise, this is a normal question, not a taught answer
-            vectorizer = st.session_state.vectorizer                   # Use the current session's vectorizer
-            lr = st.session_state.lr                                   # Use the current session's classifier
-            answers = st.session_state.answers                        # Use the current session's answer lookup
-
-            question_vector = vectorizer.transform([prompt])           # Transform the typed question into the same TF-IDF feature space as training
-            probabilities = lr.predict_proba(question_vector)[0]        # Predict probabilities across all classes, including out_of_scope
-            sorted_probs = sorted(probabilities, reverse=True)          # Sort every class probability from highest to lowest
-            best_index = probabilities.argmax()                         # Find the index of the highest-probability class
-            best_intent = lr.classes_[best_index]                       # Look up the actual intent name at that index
-            confidence = sorted_probs[0]                                 # The top probability, same value as probabilities[best_index]
-            margin = sorted_probs[0] - sorted_probs[1]                  # How much the top pick beat the second-best pick by - a small margin means the model was essentially guessing between options
-            is_confident = confidence >= CONFIDENCE_THRESHOLD and margin >= MARGIN_THRESHOLD   # Only trust this prediction if it clears both the absolute floor and the margin check
-            badge = confidence_badge_html(best_intent, confidence, margin, is_confident)   # Build the colored badge summarizing this prediction
-
-            if best_intent == "out_of_scope":                          # Check whether the model recognized this as an off-topic question
-                reply = answers["out_of_scope"]                        # Use the redirect message for off-topic questions
-                st.write(reply)                                        # Display the redirect message
-                st.markdown(badge, unsafe_allow_html=True)             # Display the confidence badge
-                st.session_state.messages.append({"role": "assistant", "content": reply, "badge": badge})   # Save this response to the chat history
-
-            elif is_confident:                                          # Otherwise, only proceed if the prediction cleared both checks above
-                reply = answers[best_intent]                           # Use the stored answer for the predicted intent
-                st.write(reply)                                        # Display the answer
-                st.markdown(badge, unsafe_allow_html=True)             # Display the confidence badge
-                st.session_state.messages.append({"role": "assistant", "content": reply, "badge": badge})   # Save this response to the chat history
-
-            else:                                                        # Otherwise, the model does not reliably recognize this question
-                reply = "I don't know that one yet — what should I say? Type your answer below and I'll remember it."   # Ask the user to teach the bot the correct answer
-                st.write(reply)                                        # Display the request to teach the bot
-                st.markdown(badge, unsafe_allow_html=True)              # Display the confidence badge
-                st.session_state.messages.append({"role": "assistant", "content": reply, "badge": badge})   # Save this response to the chat history
-                st.session_state.awaiting_answer = prompt               # Remember the original question so the next input is treated as its answer
+    # A quick-start button is rendered before chat input. Refresh once after it
+    # is used so those starter buttons disappear as soon as the chat begins.
+    if clicked_suggestion is not None:
+        st.rerun()
