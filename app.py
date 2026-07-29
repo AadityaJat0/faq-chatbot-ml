@@ -151,10 +151,15 @@ def initialize_chat_history(
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    if st.session_state.get("history_loaded"):
+    # A cookie component can cause a rerun while the session is being created.
+    # Record which storage mode was loaded so that reruns are safe and a later
+    # database configuration is still picked up instead of remaining session-only.
+    storage_mode = "saved" if history_store is not None else "session_only"
+    if st.session_state.get("history_loaded_for_mode") == storage_mode:
+        st.session_state.setdefault("history_status", storage_mode)
         return
 
-    st.session_state.history_loaded = True
+    st.session_state.history_loaded_for_mode = storage_mode
     if history_store is None:
         st.session_state.history_status = "session_only"
         return
@@ -275,7 +280,9 @@ with st.sidebar:
                 st.session_state.messages = []
                 st.session_state.awaiting_feedback_for = None
                 st.session_state.confirm_delete = False
-                st.session_state.history_loaded = True
+                st.session_state.history_loaded_for_mode = (
+                    "saved" if history_store is not None else "session_only"
+                )
                 st.session_state.history_status = (
                     "saved" if history_store is not None else "session_only"
                 )
