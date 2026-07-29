@@ -53,16 +53,14 @@ class HistoryStoreTests(unittest.TestCase):
         store.save_messages("browser-secret-token", [message])
 
         self.messages.upsert.assert_called_once_with(
-            [
-                {
-                    "id": message["id"],
-                    "conversation_id": "conversation-id",
-                    "role": "user",
-                    "content": message["content"],
-                    "prediction_badge": None,
-                    "created_at": message["created_at"],
-                }
-            ]
+            {
+                "id": message["id"],
+                "conversation_id": "conversation-id",
+                "role": "user",
+                "content": message["content"],
+                "prediction_badge": None,
+                "created_at": message["created_at"],
+            }
         )
 
     def test_load_messages_returns_only_the_matching_conversation(self):
@@ -102,7 +100,7 @@ class HistoryStoreTests(unittest.TestCase):
 
         store.save_messages("browser-secret-token", [message])
 
-        saved_row = self.messages.upsert.call_args.args[0][0]
+        saved_row = self.messages.upsert.call_args.args[0]
         self.assertEqual(saved_row["prediction_badge"], message["badge"])
 
     def test_invalid_message_is_rejected_before_database_write(self):

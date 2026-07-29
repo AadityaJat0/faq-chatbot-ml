@@ -185,6 +185,9 @@ def initialize_chat_history(
 
     try:
         st.session_state.messages = history_store.load_messages(access_token)
+        if restore_missing_badges(st.session_state.messages):
+            # Upgrade chats saved before prediction badges were persisted.
+            history_store.save_messages(access_token, st.session_state.messages)
         st.session_state.history_status = "saved"
     except HistoryStoreError:
         st.session_state.history_status = "unavailable"
@@ -228,6 +231,15 @@ def confidence_badge_html(
     )
 
 
+def review_badge_html() -> str:
+    """Give suggestion acknowledgements their own persistent amber indicator."""
+    return (
+        '<div style="display:inline-block;background:#fef3c7;color:#b45309;'
+        "border-radius:999px;padding:2px 12px;font-size:0.75rem;"
+        'font-weight:600;margin:6px 0;">Suggestion saved for review</div>'
+    )
+
+
 def resolve_reply(prompt: str) -> tuple[str, str | None, str]:
     """Return a reply, optional feedback question, and its prediction indicator."""
     vectorizer = st.session_state.vectorizer
@@ -256,6 +268,26 @@ def resolve_reply(prompt: str) -> tuple[str, str | None, str]:
         prompt,
         badge,
     )
+
+
+def restore_missing_badges(messages: list[dict[str, str]]) -> bool:
+    """Restore indicators for chats created before badges were stored in Supabase."""
+    changed = False
+    latest_question = None
+    for message in messages:
+        if message["role"] == "user":
+            latest_question = message["content"]
+            continue
+        if message.get("badge"):
+            continue
+        if message["content"].startswith("Thanks"):
+            message["badge"] = review_badge_html()
+        elif latest_question:
+            _, _, message["badge"] = resolve_reply(latest_question)
+        else:
+            continue
+        changed = True
+    return changed
 
 
 if st.session_state.get("model_dataset_hash") != dataset_hash():
@@ -381,7 +413,7 @@ if prompt:
         if st.session_state.awaiting_feedback_for is not None:
             feedback_question = st.session_state.awaiting_feedback_for
             st.session_state.awaiting_feedback_for = None
-            badge = None
+            badge = review_badge_html()
             if history_store is None:
                 reply = (
                     "Thanks for the suggestion. The feedback service has not been "
