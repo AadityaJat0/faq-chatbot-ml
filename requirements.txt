@@ -4,3 +4,9 @@ joblib==1.5.3
 streamlit==1.60.0
 supabase==2.31.0
 extra-streamlit-components==0.1.81
+# Semantic domain gate. A range rather than a hard pin because the exact
+# patch release was not verified against this environment; after your first
+# successful install run
+#   pip freeze | grep -E "sentence-transformers|torch|transformers"
+# and replace this line with the resolved versions so deploys stay reproducible.
+sentence-transformers>=5.1,<6.0

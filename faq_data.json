@@ -330,58 +330,183 @@
     "answer": "You can reach our support team via live chat in the Support app, or call our helpline, available 9 AM to 9 PM daily."
   },
   {
+    "question": "does this phone support 5G?",
+    "intent": "does_this_phone_support",
+    "answer": "Yes, all our current models support ultra-fast 5G networks."
+  },
+  {
     "question": "What is the capital of France?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "What's the weather like today?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "Can you tell me a joke?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "Who won the cricket match yesterday?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "What is 2 plus 2?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "Hi, how are you?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "What is your name?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "Recommend me a good movie",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "How do I cook pasta?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
     "question": "What time is it in New York?",
     "intent": "out_of_scope",
-    "answer": "I'm a phone support assistant, so I can only help with questions about your device \u2014 things like battery, warranty, orders, or software. Could you ask something along those lines?"
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   },
   {
-    "question": "does this phone support 5G?",
-    "intent": "does_this_phone_support",
-    "answer": "Yes, all our current models support ultra-fast 5G networks."
+    "question": "swimming?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "dancing",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What do you mean by dancing?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Do you play cricket?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "How do I learn to swim?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Best exercise for beginners",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Give me a recipe for biryani",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What should I eat for dinner?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "How long do I boil eggs?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Will it rain tomorrow?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What is the temperature outside?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Explain photosynthesis",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Help me with my maths homework",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What is the formula for area of a circle?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What do cats eat?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Are dogs colour blind?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Tell me about elephants",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "What is the meaning of life?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Are you a real person?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Sing me a song",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Who is the prime minister?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Tell me something interesting",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Which series should I watch tonight?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Who acted in that new film?",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
+  },
+  {
+    "question": "Suggest some good music",
+    "intent": "out_of_scope",
+    "answer": "I'm a phone support assistant, so I can only help with questions about your device — things like battery, warranty, orders, or software. Could you ask something along those lines?"
   }
 ]

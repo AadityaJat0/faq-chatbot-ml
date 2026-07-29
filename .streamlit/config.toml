@@ -1,0 +1,4 @@
+[client]
+# The owner review page lives in pages/ but should not be advertised in the
+# public sidebar. It stays reachable at /Owner_Review and is password-gated.
+showSidebarNavigation = false

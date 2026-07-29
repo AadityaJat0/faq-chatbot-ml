@@ -70,12 +70,12 @@ class SupabaseHistoryStore:
             return
 
         conversation_id = self._get_or_create_conversation_id(access_token)
+        rows = [self._message_row(conversation_id, message) for message in messages]
         try:
             # Saving one row at a time keeps optional fields (such as a badge)
             # attached to the correct assistant message. Bulk upserts infer their
             # columns from the first row, which is normally a user message.
-            for message in messages:
-                row = self._message_row(conversation_id, message)
+            for row in rows:
                 self._client.table("messages").upsert(row).execute()
         except Exception as exc:
             raise HistoryStoreError("ResolveBot could not save this chat right now.") from exc

@@ -13,8 +13,15 @@ import extra_streamlit_components as stx
 import streamlit as st
 
 from history_store import HistoryStoreError, SupabaseHistoryStore
+from semantic_gate import (
+    OFF_TOPIC,
+    SUGGESTION,
+    VERIFIED,
+    build_domain_gate,
+    decide_scope,
+    load_thresholds,
+)
 from train_model import train_model
-
 
 APP_DIR = Path(__file__).resolve().parent
 DATA_PATH = APP_DIR / "faq_data.json"
@@ -22,6 +29,8 @@ HISTORY_COOKIE_NAME = "resolvebot_history_token"
 HISTORY_COOKIE_LIFETIME = timedelta(days=180)
 MAX_INPUT_CHARS = 2_000
 
+CONFIDENCE_THRESHOLD = 0.10
+MARGIN_THRESHOLD = 0.05
 
 st.set_page_config(
     page_title="ResolveBot | Phone Support Chatbot",
@@ -32,8 +41,8 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    .stChatMessage { border-radius: 14px; padding: 4px 2px; }
-    div[data-testid="stChatMessageContent"] { font-size: 0.95rem; }
+      .stChatMessage { border-radius: 14px; padding: 4px 2px; }
+      div[data-testid="stChatMessageContent"] { font-size: 0.95rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -52,12 +61,28 @@ def build_model(current_dataset_hash: str):
     return train_model(data_path=DATA_PATH)
 
 
+@st.cache_resource(show_spinner="Loading the semantic domain gate...")
+def build_scope_gate(current_dataset_hash: str):
+    """Embed the verified in-scope questions once per deployment.
+
+    Cached as a resource because the first call downloads and loads a small
+    sentence-embedding model. Keyed on the dataset hash so that publishing new
+    verified knowledge also refreshes the reference embeddings.
+    """
+    del current_dataset_hash
+    with DATA_PATH.open() as data_file:
+        rows = json.load(data_file)
+    return build_domain_gate(rows)
+
+
 def refresh_session_model() -> None:
     current_dataset_hash = dataset_hash()
     vectorizer, classifier, answers = build_model(current_dataset_hash)
     st.session_state.vectorizer = vectorizer
     st.session_state.classifier = classifier
     st.session_state.answers = answers
+    st.session_state.scope_gate = build_scope_gate(current_dataset_hash)
+    st.session_state.scope_thresholds = load_thresholds()
     st.session_state.model_dataset_hash = current_dataset_hash
 
 
@@ -75,7 +100,6 @@ def configured_history_store() -> SupabaseHistoryStore | None:
         service_role_key = str(config.get("service_role_key", "")).strip()
     except Exception:
         return None
-
     if not url or not service_role_key:
         return None
     return connect_history_store(url, service_role_key)
@@ -179,6 +203,7 @@ def initialize_chat_history(
         return
 
     st.session_state.history_loaded_for_mode = storage_mode
+
     if history_store is None:
         st.session_state.history_status = "session_only"
         return
@@ -201,7 +226,6 @@ def persist_messages(
     """Save the newest messages, while leaving the chat responsive on failure."""
     if history_store is None:
         return False
-
     try:
         history_store.save_messages(access_token, messages)
         st.session_state.history_status = "saved"
@@ -211,23 +235,30 @@ def persist_messages(
         return False
 
 
-def confidence_badge_html(
-    intent: str, confidence: float, margin: float, is_confident: bool
-) -> str:
-    """Build the green, amber, or red prediction indicator shown below a reply."""
-    if intent == "out_of_scope":
-        color, background, label = "#b45309", "#fef3c7", "Off-topic"
-    elif is_confident:
+def decision_badge_html(decision) -> str:
+    """Build the green, amber, or red prediction indicator shown below a reply.
+
+    The badge now reports the semantic similarity alongside the classifier
+    numbers, because the domain gate is the reason an unrelated question is
+    redirected instead of being sent to the suggestion flow.
+    """
+    if decision.outcome == VERIFIED:
         color, background, label = "#15803d", "#dcfce7", "Confident match"
+    elif decision.outcome == OFF_TOPIC:
+        color, background, label = "#b45309", "#fef3c7", "Off-topic"
     else:
         color, background, label = "#b91c1c", "#fee2e2", "Low confidence"
 
+    detail = (
+        f"{decision.intent} &middot; confidence {decision.confidence:.2f}"
+        f" &middot; margin {decision.margin:.2f}"
+        f" &middot; in-scope {decision.similarity:.2f}"
+    )
     return (
         f'<div style="display:inline-block;background:{background};color:{color};'
         "border-radius:999px;padding:2px 12px;font-size:0.75rem;"
         'font-weight:600;margin:6px 0;">'
-        f"{label} &middot; {intent} &middot; confidence {confidence:.2f}"
-        f" &middot; margin {margin:.2f}</div>"
+        f"{label} &middot; {detail}</div>"
     )
 
 
@@ -241,26 +272,53 @@ def review_badge_html() -> str:
 
 
 def resolve_reply(prompt: str) -> tuple[str, str | None, str]:
-    """Return a reply, optional feedback question, and its prediction indicator."""
+    """Return a reply, optional feedback question, and its prediction indicator.
+
+    Two independent signals are combined here:
+
+    * the TF-IDF + Logistic Regression classifier, which decides WHICH intent
+      a question is closest to, and
+    * the semantic domain gate, which decides WHETHER the question belongs to
+      phone support at all.
+
+    The second signal exists because low classifier confidence does not mean
+    "out of domain" -- it only means "unsure between my intents". Without the
+    gate, a question like "swimming?" scored near zero on every intent, landed
+    on whichever one happened to be highest, and was offered to the visitor as
+    something they could supply a phone-support answer for.
+    """
     vectorizer = st.session_state.vectorizer
     classifier = st.session_state.classifier
     answers = st.session_state.answers
+    gate = st.session_state.scope_gate
 
     question_vector = vectorizer.transform([prompt])
     probabilities = classifier.predict_proba(question_vector)[0]
     sorted_probabilities = sorted(probabilities, reverse=True)
-    best_index = probabilities.argmax()
-    best_intent = classifier.classes_[best_index]
+    best_intent = classifier.classes_[probabilities.argmax()]
     confidence = sorted_probabilities[0]
     margin = sorted_probabilities[0] - sorted_probabilities[1]
 
-    is_confident = confidence >= 0.10 and margin >= 0.05
-    badge = confidence_badge_html(best_intent, confidence, margin, is_confident)
-    if best_intent == "out_of_scope":
-        return answers["out_of_scope"], None, badge
-    if is_confident:
-        return answers[best_intent], None, badge
+    decision = decide_scope(
+        intent=str(best_intent),
+        confidence=float(confidence),
+        margin=float(margin),
+        similarity=gate.similarity(prompt),
+        gate_mode=gate.mode,
+        thresholds=st.session_state.get("scope_thresholds"),
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        margin_threshold=MARGIN_THRESHOLD,
+    )
 
+    badge = decision_badge_html(decision)
+
+    if decision.outcome == OFF_TOPIC:
+        return answers["out_of_scope"], None, badge
+
+    if decision.outcome == VERIFIED:
+        return answers[decision.intent], None, badge
+
+    # decision.outcome == SUGGESTION: plausibly in-domain, but unverified.
     return (
         "I don't have a verified answer for that yet. If you'd like to help "
         "improve ResolveBot, type the answer you expected and I’ll save it for "
@@ -305,17 +363,17 @@ browser_cookies = cookie_manager()
 access_token = history_access_token(browser_cookies)
 initialize_chat_history(history_store, access_token)
 
-
 st.title("🤖 ResolveBot — Phone Support Chatbot")
 st.caption("Your phone support assistant for common device questions.")
+
 if st.session_state.history_status == "saved":
     st.caption("✓ This chat is saved automatically for this browser.")
 elif st.session_state.history_status == "unavailable":
     st.warning("This chat is visible now, but it could not be saved at the moment.")
 else:
     st.caption("This chat is available for the current session.")
-st.caption("Avoid sharing passwords, PINs, OTPs, or other sensitive information.")
 
+st.caption("Avoid sharing passwords, PINs, OTPs, or other sensitive information.")
 
 with st.sidebar:
     st.subheader("Your chat")
@@ -374,7 +432,17 @@ with st.sidebar:
             "ResolveBot uses TF-IDF features and Logistic Regression to match "
             "common phone-support intents."
         )
-
+        gate_mode = st.session_state.scope_gate.mode
+        if gate_mode == "embedding":
+            st.caption(
+                "A sentence-embedding domain gate checks whether a question "
+                "belongs to phone support before any answer is offered."
+            )
+        else:
+            st.caption(
+                "The embedding model is unavailable, so a stricter keyword-based "
+                "domain check is in use. Unrelated questions are still redirected."
+            )
 
 for message in st.session_state.messages:
     avatar = "🧑" if message["role"] == "user" else "🤖"
@@ -382,7 +450,6 @@ for message in st.session_state.messages:
         st.write(message["content"])
         if message.get("badge"):
             st.markdown(message["badge"], unsafe_allow_html=True)
-
 
 clicked_suggestion = None
 if not st.session_state.messages:
@@ -398,7 +465,6 @@ if not st.session_state.messages:
         with suggestion_columns[index % len(suggestion_columns)]:
             if st.button(suggestion, use_container_width=True):
                 clicked_suggestion = suggestion
-
 
 typed_prompt = st.chat_input("Ask ResolveBot a question...", max_chars=MAX_INPUT_CHARS)
 prompt = clicked_suggestion or typed_prompt
